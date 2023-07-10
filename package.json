@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "@types/node-fetch": "^2.6.2"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.0"
+  },
+  "type": "module"
+}
