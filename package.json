@@ -6,5 +6,25 @@
   "dependencies": {
     "node-fetch": "^3.3.0"
   },
-  "type": "module"
+  "type": "module",
+  "name": "psscore",
+  "description": "Grab your scores from Practiscore and ready to be pasted into your video.",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gildorwang/psscore.git"
+  },
+  "keywords": [
+    "Practiscore"
+  ],
+  "author": "Ken Wang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gildorwang/psscore/issues"
+  },
+  "homepage": "https://github.com/gildorwang/psscore#readme"
 }
