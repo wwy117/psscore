@@ -3,9 +3,11 @@
 // Don't forget to fill in the match ID and your name!
 
 import fetch from 'node-fetch';
+import { Command } from 'commander';
+const program = new Command();
 
 // Copy the ID from Practiscore's score page URL. E.g. https://practiscore.com/results/new/07dfa54d-ccc0-44f5-add2-112233445566
-const _matchId = "07dfa54d-ccc0-44f5-add2-112233445566";
+let _matchId = "07dfa54d-ccc0-44f5-add2-112233445566";
 
 // Your division name
 const _div = "Carry Optics";
@@ -14,7 +16,18 @@ const _div = "Carry Optics";
 const _divAlt = "CO";
 
 // Your name as in the registration in the format of "Last, First".  E.g. Wang, Ken.
-const _shooterName = "Wang, Ken";
+let _shooterName = "Wang, Ken";
+
+program
+  .version('1.0.0', '-v, --version')
+  .usage('[OPTIONS]...')
+  .option('-name, --shooter_name <value>', 'The name of the shooter.')
+  .option('-id, --match_id <value>', 'The match id to look for.', 'Default')
+  .parse(process.argv);
+
+const options = program.opts();
+_shooterName = options.shooter_name;
+_matchId = options.match_id;
 
 const [response, scoresResponse] = await Promise.all([
     fetch(`https://s3.amazonaws.com/ps-scores/production/${_matchId}/results.json`),
@@ -22,6 +35,7 @@ const [response, scoresResponse] = await Promise.all([
 ]);
 const [results, scores] = await Promise.all([response.json(), scoresResponse.json()]);
 // console.log(JSON.stringify(results));
+
 
 // Calc scores
 // For ts: 
