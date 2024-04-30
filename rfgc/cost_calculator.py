@@ -47,7 +47,7 @@ def main(filepath: str):
     refund_list = []
     uspsa_members = []
     for s in shooters:
-        if not s['Paid Status']:
+        if s['Paid Status'] != 'Paid':
             continue
         paid_count += 1
         total_revenue += MATCH_FEE
