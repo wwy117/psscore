@@ -42,6 +42,7 @@ def main(filepath: str):
     ROs = []
     total_revenue = 0
     total_discount = 0
+    refund_list = []
     for s in shooters:
         if not s['Paid Status']:
             continue
@@ -57,7 +58,11 @@ def main(filepath: str):
             renton_members.append({'First Name': s['First Name'], 'Last Name': s['Last Name']})
         if s['Junior']:
             juniors.append({'First Name': s['First Name'], 'Last Name': s['Last Name']})
-        total_discount += discount(s)
+        shooter_discount = discount(s)
+        if shooter_discount:
+            refund_list.append(({'First Name': s['First Name'], 'Last Name': s['Last Name'],
+                                 'Refund': str(shooter_discount)}))
+        total_discount += shooter_discount
 
     print(f'Total revenue: {total_revenue}')
     print(f'Total discount: {total_discount}')
@@ -66,6 +71,9 @@ def main(filepath: str):
     print(f'Number of Active Military: {len(active_militarys)}')
     print(f'Number of Junior: {len(juniors)}')
     print(f'Number of Renton Member: {len(renton_members)}')
+    print('Refund list:')
+    for s in refund_list:
+        print(f'{s}')
     print('Setup Crew list:')
     for s in setup_crews:
         print(f'{s}')
@@ -77,6 +85,9 @@ def main(filepath: str):
         print(f'{s}')
     print('Active Military list:')
     for s in active_militarys:
+        print(f'{s}')
+    print('Junior list:')
+    for s in juniors:
         print(f'{s}')
 
 if __name__ == '__main__':
