@@ -29,13 +29,16 @@ const options = program.opts();
 _shooterName = options.shooter_name;
 _matchId = options.match_id;
 
-const [response, scoresResponse] = await Promise.all([
+const [response, scoresResponse, defResponse] = await Promise.all([
     fetch(`https://s3.amazonaws.com/ps-scores/production/${_matchId}/results.json`),
-    fetch(`https://s3.amazonaws.com/ps-scores/production/${_matchId}/match_scores.json`)
+    fetch(`https://s3.amazonaws.com/ps-scores/production/${_matchId}/match_scores.json`),
+    fetch(`https://s3.amazonaws.com/ps-scores/production/${_matchId}/match_def.json`)
 ]);
-const [results, scores] = await Promise.all([response.json(), scoresResponse.json()]);
+const [results, scores, def] = await Promise.all([response.json(), scoresResponse.json(), defResponse.json()]);
+console.log(def.match_name);
 // console.log(JSON.stringify(results));
 
+const stageMap = new Map(def.match_stages.map(s => [s.stage_uuid, s]));
 
 // Calc scores
 // For ts: 
@@ -148,15 +151,17 @@ function scoreToString(score) {
 results.shift();
 const stages = results.forEach((stage) => {
     const stageId = stage["stageUUID"];
+    const stageDef = stageMap.get(stageId);
     const name = Object.keys(stage).find((key) => typeof stage[key] == "object");
     const stageDiv = stage[name].find((d) => d[_div]);
     const div = stageDiv ? stageDiv[_div] : stage[name].find((d) => d[_divAlt])[_divAlt];
     const shooterCount = div.length;
     const shooter = div.find((s) => s.shooterName === _shooterName);
     const score = shooter && scoreToString(scoreMap[stageId][shooter.shooter]);
+    const classifierInfo = stageDef && stageDef.stage_classifiercode && `(CM ${stageDef.stage_classifiercode})` || "";
     const text = shooter ?
 `
-${name}
+${name} ${classifierInfo}
 ${shooter.place}/${shooterCount} ${shooter.stagePercent}%
 ${score}
 Time ${shooter.stageTimeSecs}s
