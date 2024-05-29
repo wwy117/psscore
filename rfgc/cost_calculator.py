@@ -24,7 +24,7 @@ def main(filepath: str):
     shooters = []
     headers = []
     with open(filepath, 'r', newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in reader:
             if not headers:
                 headers = row
@@ -46,8 +46,14 @@ def main(filepath: str):
     total_discount = 0
     refund_list = []
     uspsa_members = []
+    staff_count = 0
     for s in shooters:
         if s['Paid Status'] != 'Paid':
+            continue
+        if 'Staff' in s['Approval Status']:
+            staff_count += 1
+            if s['Member Number']:
+                uspsa_members.append({'First Name': s['First Name'], 'Last Name': s['Last Name']})
             continue
         paid_count += 1
         total_revenue += MATCH_FEE
@@ -72,7 +78,7 @@ def main(filepath: str):
     print(f'Gross revenue: {total_revenue}')
     print(f'Total discount: {total_discount}')
     print(f'Total USPSA fee: {len(uspsa_members) * USPSA_CLASSIFIER_FEE}')
-    print(f'Total NW Session fee: {paid_count * NW_SESSION_FEE}')
+    print(f'Total NW Session fee: {(paid_count + staff_count) * NW_SESSION_FEE}')
     print(f'Net Revenue: {total_revenue - total_discount - len(uspsa_members) * USPSA_CLASSIFIER_FEE - paid_count * NW_SESSION_FEE}')
     print(f'Total Paid Shooters: {paid_count}')
     print(f'Number of setup crew: {len(setup_crews)}')
