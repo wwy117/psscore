@@ -36,6 +36,19 @@ def main(filepath: str):
                 except IndexError:
                     print(f'{i} is out of boundary of {row}\n')
             shooters.append(shooter)
+
+    # Sanity check on errors
+    if len(shooters) == 0:
+        raise RuntimeError('The shooter list is empty')
+    shooter = shooters[0]
+    if not 'RO' in shooter:
+        raise RuntimeError('Missing RO column')
+    if not 'Setup' in shooter:
+        raise RuntimeError('Missing Setup column')
+    if '"Paid Status"' in shooter:
+        raise RuntimeError('Double quoted field name presents. Open the doc in excel, save it as csv and rerun this program again.')
+
+    # Process data & generate lists
     paid_count = 0
     renton_members = []
     active_militarys = []
@@ -75,6 +88,7 @@ def main(filepath: str):
                                  'Refund': str(shooter_discount)}))
         total_discount += shooter_discount
 
+    # Print reports
     print(f'Gross revenue: {total_revenue}')
     print(f'Total discount: {total_discount}')
     print(f'Total USPSA fee: {len(uspsa_members) * USPSA_CLASSIFIER_FEE}')
