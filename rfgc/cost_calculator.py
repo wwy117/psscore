@@ -1,13 +1,14 @@
 import argparse
 import csv
+import logging
 
 MATCH_FEE = 30
 USPSA_CLASSIFIER_FEE = 3
 NW_SESSION_FEE = 1
 
-def discount(record: dict[str, str]) -> int:
+def discount(record: dict[str, str], match_fee: float) -> int:
     if record['Setup']:
-        return MATCH_FEE
+        return match_fee
     if record['RO']:
         return 10
     if record['Active Military']:
@@ -18,11 +19,12 @@ def discount(record: dict[str, str]) -> int:
         return 5
     return 0
 
-def main(filepath: str):
+def main(filepath: str, match_fee: float, uspsa: bool):
     # Note that the csv file need to have two columns: RO and Setup
     # The RO column represents a working RO, and Setup column represents a setup crew.
     shooters = []
     headers = []
+    uspsa_fee = USPSA_CLASSIFIER_FEE if uspsa else 0
     with open(filepath, 'r', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in reader:
@@ -34,7 +36,7 @@ def main(filepath: str):
                 try:
                     shooter[headers[i]] = row[i]
                 except IndexError:
-                    print(f'{i} is out of boundary of {row}\n')
+                    logging.warning(f'{i} is out of boundary of {row}\n')
             shooters.append(shooter)
 
     # Sanity check on errors
@@ -69,7 +71,7 @@ def main(filepath: str):
                 uspsa_members.append({'First Name': s['First Name'], 'Last Name': s['Last Name']})
             continue
         paid_count += 1
-        total_revenue += MATCH_FEE
+        total_revenue += match_fee
         if s['RO']:
             ROs.append({'First Name': s['First Name'], 'Last Name': s['Last Name']})
         if s['Setup']:
@@ -82,47 +84,49 @@ def main(filepath: str):
             juniors.append({'First Name': s['First Name'], 'Last Name': s['Last Name']})
         if s['Member Number']:
             uspsa_members.append({'First Name': s['First Name'], 'Last Name': s['Last Name']})
-        shooter_discount = discount(s)
+        shooter_discount = discount(s, match_fee)
         if shooter_discount:
             refund_list.append(({'First Name': s['First Name'], 'Last Name': s['Last Name'],
                                  'Refund': str(shooter_discount)}))
         total_discount += shooter_discount
 
     # Print reports
-    print(f'Gross revenue: {total_revenue}')
-    print(f'Total discount: {total_discount}')
-    print(f'Total USPSA fee: {len(uspsa_members) * USPSA_CLASSIFIER_FEE}')
-    print(f'Total NW Session fee: {(paid_count + staff_count) * NW_SESSION_FEE}')
-    print(f'Net Revenue: {total_revenue - total_discount - len(uspsa_members) * USPSA_CLASSIFIER_FEE - paid_count * NW_SESSION_FEE}')
-    print(f'Total Paid Shooters: {paid_count}')
-    print(f'Number of setup crew: {len(setup_crews)}')
-    print(f'Number of ROs: {len(ROs)}')
-    print(f'Number of Active Military: {len(active_militarys)}')
-    print(f'Number of Junior: {len(juniors)}')
-    print(f'Number of Renton Member: {len(renton_members)}')
-    print(f'Number of USPSA members: {len(uspsa_members)}')
-    print('Refund list:')
+    logging.info(f'Gross revenue: {total_revenue}')
+    logging.info(f'Total discount: {total_discount}')
+    logging.info(f'Total USPSA fee: {len(uspsa_members) * uspsa_fee}')
+    logging.info(f'Total NW Session fee: {(paid_count + staff_count) * NW_SESSION_FEE}')
+    logging.info(f'Net Revenue: {total_revenue - total_discount - len(uspsa_members) * uspsa_fee - paid_count * NW_SESSION_FEE}')
+    logging.info(f'Total Paid Shooters: {paid_count}')
+    logging.info(f'Number of setup crew: {len(setup_crews)}')
+    logging.info(f'Number of ROs: {len(ROs)}')
+    logging.info(f'Number of Active Military: {len(active_militarys)}')
+    logging.info(f'Number of Junior: {len(juniors)}')
+    logging.info(f'Number of Renton Member: {len(renton_members)}')
+    logging.info(f'Number of USPSA members: {len(uspsa_members)}')
+    logging.info('Refund list:')
     for s in refund_list:
-        print(f'{s}')
-    print('Setup Crew list:')
+        logging.info(f'{s}')
+    logging.info('Setup Crew list:')
     for s in setup_crews:
-        print(f'{s}')
-    print('RO list:')
+        logging.info(f'{s}')
+    logging.info('RO list:')
     for s in ROs:
-        print(f'{s}')
-    print('Renton Member list:')
+        logging.info(f'{s}')
+    logging.info('Renton Member list:')
     for s in renton_members:
-        print(f'{s}')
-    print('Active Military list:')
+        logging.info(f'{s}')
+    logging.info('Active Military list:')
     for s in active_militarys:
-        print(f'{s}')
-    print('Junior list:')
+        logging.info(f'{s}')
+    logging.info('Junior list:')
     for s in juniors:
-        print(f'{s}')
+        logging.info(f'{s}')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process command line arguments.')
     parser.add_argument('--filepath', type = str, help = 'file to open')
+    parser.add_argument('--fee', type = float, default = 30.0, help = 'the fee per person')
+    parser.add_argument('--uspsa', action=argparse.BooleanOptionalAction, default=True, help = 'whether to pay USPSA.org or not')
     args = parser.parse_args()
-    main(args.filepath)
-
+    logging.basicConfig(format='%(message)s', level=logging.INFO)
+    main(args.filepath, args.fee, args.uspsa)
