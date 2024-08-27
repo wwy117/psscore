@@ -2,7 +2,8 @@
 #
 # Note to use this tool, you need to download all-shooters.csv from practiscore.
 # Add two columns: RO and Setup. Then put value such as 'yes' on the corresponding rows.
-# Save the csv file. Run the script to generate a list of outputs.
+# Save the csv file. Check result link for total number of scores being uploaded, including DQed.
+# Run the script to generate a list of outputs.
 #
 # Usage example:
 # python3.exe rfgc\cost_calculator.py --filepath \path\to\downloaded\all-shooters.csv --fee 30 --uspsa
@@ -13,6 +14,7 @@ import logging
 
 MATCH_FEE = 30
 USPSA_CLASSIFIER_FEE = 3
+USPSA_NO_CLASSIFIER_FEE = 1.5
 NW_SESSION_FEE = 1
 
 def discount(record: dict[str, str], match_fee: float) -> int:
@@ -28,12 +30,12 @@ def discount(record: dict[str, str], match_fee: float) -> int:
         return 5
     return 0
 
-def main(filepath: str, match_fee: float, uspsa: bool):
+def main(filepath: str, match_fee: float, uspsa: bool, total_score_uploaded: int):
     # Note that the csv file need to have two columns: RO and Setup
     # The RO column represents a working RO, and Setup column represents a setup crew.
     shooters = []
     headers = []
-    uspsa_fee = USPSA_CLASSIFIER_FEE if uspsa else 0
+    uspsa_fee = USPSA_CLASSIFIER_FEE if uspsa else USPSA_NO_CLASSIFIER_FEE
     with open(filepath, 'r', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in reader:
@@ -58,6 +60,8 @@ def main(filepath: str, match_fee: float, uspsa: bool):
         raise RuntimeError('Missing Setup column')
     if '"Paid Status"' in shooter:
         raise RuntimeError('Double quoted field name presents. Open the doc in excel, save it as csv and rerun this program again.')
+    if not total_score_uploaded:
+        raise RuntimeError("The total number of scores uploaded is zero. Find that number from practiscore.com result url and run this again.")
 
     # Process data & generate lists
     paid_count = 0
@@ -102,10 +106,11 @@ def main(filepath: str, match_fee: float, uspsa: bool):
     # Print reports
     logging.info(f'Gross revenue: {total_revenue}')
     logging.info(f'Total discount: {total_discount}')
-    logging.info(f'Total USPSA fee: {len(uspsa_members) * uspsa_fee}')
-    logging.info(f'Total NW Session fee: {(paid_count + staff_count) * NW_SESSION_FEE}')
+    logging.info(f'Total USPSA fee: {total_score_uploaded * uspsa_fee}')
+    logging.info(f'Total NW Session fee: {total_score_uploaded * NW_SESSION_FEE}')
     logging.info(f'Net Revenue: {total_revenue - total_discount - len(uspsa_members) * uspsa_fee - paid_count * NW_SESSION_FEE}')
     logging.info(f'Total Paid Shooters: {paid_count}')
+    logging.info(f'Total scores uploaded: {total_score_uploaded}')
     logging.info(f'Number of setup crew: {len(setup_crews)}')
     logging.info(f'Number of ROs: {len(ROs)}')
     logging.info(f'Number of Active Military: {len(active_militarys)}')
@@ -136,6 +141,7 @@ if __name__ == '__main__':
     parser.add_argument('--filepath', type = str, help = 'file to open')
     parser.add_argument('--fee', type = float, default = 30.0, help = 'the fee per person')
     parser.add_argument('--uspsa', action=argparse.BooleanOptionalAction, default=True, help = 'whether to pay USPSA.org or not')
+    parser.add_argument('--total_score_uploaded', type = int, default = 0, help = 'how many scores being uploaded, included DQed scores.')
     args = parser.parse_args()
     logging.basicConfig(format='%(message)s', level=logging.INFO)
-    main(args.filepath, args.fee, args.uspsa)
+    main(args.filepath, args.fee, args.uspsa, args.total_score_uploaded)
