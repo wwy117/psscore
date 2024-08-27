@@ -1,3 +1,12 @@
+# Tools that generate a fiancial report based on a practiscore download csv file.
+#
+# Note to use this tool, you need to download all-shooters.csv from practiscore.
+# Add two columns: RO and Setup. Then put value such as 'yes' on the corresponding rows.
+# Save the csv file. Run the script to generate a list of outputs.
+#
+# Usage example:
+# python3.exe rfgc\cost_calculator.py --filepath \path\to\downloaded\all-shooters.csv --fee 30 --uspsa
+#
 import argparse
 import csv
 import logging
