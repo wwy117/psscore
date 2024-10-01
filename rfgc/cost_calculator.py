@@ -36,7 +36,7 @@ def main(filepath: str, match_fee: float, uspsa: bool, total_score_uploaded: int
     shooters = []
     headers = []
     uspsa_fee = USPSA_CLASSIFIER_FEE if uspsa else USPSA_NO_CLASSIFIER_FEE
-    with open(filepath, 'r', newline='') as csvfile:
+    with open(filepath, 'r', newline='', encoding='utf8') as csvfile:
         reader = csv.reader(csvfile, delimiter=',', quotechar='"')
         for row in reader:
             if not headers:
